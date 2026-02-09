@@ -1,0 +1,32 @@
+import serial
+import serial.tools.list_ports
+
+class sx126x:
+    def __init__(self, serial_num):
+        self.ser = serial.Serial(serial_num, baudrate=9600, timeout=1)
+
+    def receive(self):
+        if self.ser.in_waiting:
+            data = self.ser.readline().decode().strip()
+            if data:
+                print(f"Received: {data}")
+
+def detect_lora_port():
+    ports = list(serial.tools.list_ports.comports())
+    for port in ports:
+        if "USB" in port.description or "Serial" in port.description:
+            return port.device
+    return "/dev/serial0"  # fallback to GPIO
+
+lora_port = detect_lora_port()
+print(f"Using LoRa on port: {lora_port}")
+
+# Initialize LoRa receiver
+receiver = sx126x(serial_num=lora_port)
+
+# Receiving loop
+try:
+    while True:
+        receiver.receive()
+except KeyboardInterrupt:
+    print("Receiver stopped.")
